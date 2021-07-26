@@ -898,35 +898,34 @@ class Earth(BaseEstimator, RegressorMixin, TransformerMixin):
 
     def summary(self):
         '''Return a string describing the model.'''
-        result = pd.DataFrame()
+        result = ''
         if self.forward_trace() is None:
-            result.style.set_caption('Untrained Earth Model')
+            result += 'Untrained Earth Model'
             return result
         elif self.pruning_trace() is None:
-            result.style.set_caption('Unpruned Earth Model')
+            result += 'Unpruned Earth Model\n'
         else:
-            result.style.set_caption('Earth Model')
-            result.insert[0, 'Basis Function']
-            result.insert[1, 'Pruned']
+            result += 'Earth Model\n'
+        header = ['Basis Function', 'Pruned']
         if self.coef_.shape[0] > 1:
-            coefficient_string = ''
-            for i in range(self.coef_.shape[0]):
-                coefficient_string += str(i)
-                result.insert[2 + i, f'Coefficient {coefficient_string}']
+            header += ['Coefficient %d' %
+                       i for i in range(self.coef_.shape[0])]
         else:
-            result.insert[2, 'Coefficient']
+            header += ['Coefficient']
+        data = []
 
         i = 0
         for bf in self.basis_:
-            result.append(([str(bf), 'Yes' if bf.is_pruned() else 'No'] + [
+            data.append([str(bf), 'Yes' if bf.is_pruned() else 'No'] + [
                           '%g' % self.coef_[c, i] if not bf.is_pruned() else
-                          'None' for c in range(self.coef_.shape[0])]))
+                          'None' for c in range(self.coef_.shape[0])])
             if not bf.is_pruned():
                 i += 1
-        result_string = ''        
-        result_string += 'MSE: %.4f, GCV: %.4f, RSQ: %.4f, GRSQ: %.4f' % (
+        result += ascii_table(header, data)
+        result += '\n'
+        result += 'MSE: %.4f, GCV: %.4f, RSQ: %.4f, GRSQ: %.4f' % (
             self.mse_, self.gcv_, self.rsq_, self.grsq_)
-        return result, '\n' + result_string
+        return data
 
     def summary_feature_importances(self, sort_by=None):
         """
